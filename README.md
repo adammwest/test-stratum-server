@@ -42,7 +42,7 @@ I (653231) SystemModule: FOUND BLOCK!!! 176372654042012.437500 > 110451907374649
 
 # The scripts
 
-1. `scan_compatible_blocks.py` scans the blocks from a local bitcoin node for the requirements of nonce bits `0xffff0ffe` and version bits `0x1fffe000`. Even if found such compatible block the nonce is not found in any case. This can be ASIC model dependant (the method how the ASIC generates nonces).
+1. `scan_compatible_blocks.py` scans the blocks from a local bitcoin node for the requirements of nonce bits `0xffff0ffe` and version bits `0x1fffe000`. Even if such compatible block was found the nonce is not found in all case. This can be ASIC model dependant (the method how the ASIC generates nonces).
 2. `create_notify_submit.py` generates a `json` file for the given block number.
 3. `test-server.py` is the actual test Stratum server loading a json file with a valid `notify` and `submit`.
 
