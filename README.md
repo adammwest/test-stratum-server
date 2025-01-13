@@ -1,7 +1,7 @@
 # test-stratum-server
 
-**note: It has been tested with BM1368 only. It might not work with 1366 and probably doesn't with 1370.**
-**note2: BitAxe and BitAxeHex won't find the block. BitAxe not because the 3rd ASIC will find it and BitAxeHex not because the chip-ID is set differently**
+**note: It has been tested with BM1368 only. It might not work with 1366 and probably doesn't with 1370.**<br/>
+**note2: BitAxe and BitAxeHex won't find the block. BitAxe not because the 3rd ASIC will find it and BitAxeHex not because the chip-ID is set differently**<br/>
 
 This minimum test Stratum server is for testing [NerdQaxes](https://github.com/shufps/qaxe) finding a block.
 
