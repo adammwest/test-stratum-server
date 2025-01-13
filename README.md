@@ -32,6 +32,11 @@ On the `NerdQAxe+`:
 
 ![image](https://github.com/user-attachments/assets/dd45f31f-5907-490e-a6e5-e37a5282f3ea)
 
+in the log:
+```
+I (653231) SystemModule: FOUND BLOCK!!! 176372654042012.437500 > 110451907374649.515625
+```
+
 
 
 
