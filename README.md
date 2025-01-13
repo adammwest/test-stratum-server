@@ -1,8 +1,10 @@
 # test-stratum-server
 
+**note: It has been tested with BM1368 only. It might not work with 1366 and probably doesn't with 1370.**
+
 This minimum test Stratum server is for testing [NerdQaxes](https://github.com/shufps/qaxe) finding a block.
 
-**note: It has been tested with BM1368 only. It might not work with 1366 and probably doesn't with 1370.**
+The Stratum job is designed to trigger the finding at the `extranonce2 == '00000000000000ff'`.
 
 Example:
 ```
@@ -26,6 +28,11 @@ $ python3 test-server.py
 ...
 ```
 
-The Stratum job is designed to trigger the finding at the `extranonce2 == '00000000000000ff'`.
+On the `NerdQAxe+`:
+
+![image](https://github.com/user-attachments/assets/dd45f31f-5907-490e-a6e5-e37a5282f3ea)
+
+
+
 
 
