@@ -30,6 +30,8 @@ $ python3 test-server.py
 
 On the `NerdQAxe+`:
 
+Settings: `490MHz`, job interval `1200ms`
+
 ![image](https://github.com/user-attachments/assets/dd45f31f-5907-490e-a6e5-e37a5282f3ea)
 
 in the log:
