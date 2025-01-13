@@ -2,6 +2,7 @@
 import json
 import requests
 import hashlib
+import argparse
 from requests.auth import HTTPBasicAuth
 
 ##############################################################################
@@ -374,8 +375,26 @@ def reconstruct(notify, submit):
 ##############################################################################
 # 8) MAIN
 ##############################################################################
+def parse_arguments():
+    """
+    Parse command line arguments.
+    """
+    parser = argparse.ArgumentParser(
+        description="Scan blocks for nonce and version compatibility, and display mining pool information."
+    )
+    parser.add_argument(
+        "-b", "--blockheight",
+        type=int,
+        default=878794,
+        help="Starting block height for the scan (default: 878794)."
+    )
+    return parser.parse_args()
+
 def main():
-    block_height = 878794  # Adjust as needed
+    args = parse_arguments()
+    block_height = args.blockheight
+
+    #block_height = 878794  # Adjust as needed
 
     # Connect to local Bitcoin node.
     rpc = BitcoinRPC(user="bitcoin", password="bitcoin", host="127.0.0.1", port=8332)
