@@ -25,3 +25,4 @@ $ python3 test-server.py
 ...
 ```
 
+The Stratum job is designed to trigger the finding at the `extranonse2 == '00000000000000ff'`
