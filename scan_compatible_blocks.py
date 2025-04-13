@@ -9,8 +9,13 @@ RPC_PASSWORD = "bitcoin"
 PROXY = RawProxy(service_url=f"http://{RPC_USER}:{RPC_PASSWORD}@127.0.0.1:8332")
 
 # Masks for nonce and version checks.
-BIT_MASK = 0xffff0ffe  # Specified bit mask for the nonce.
-VERSION_MASK = 0x1fffe000  # Allowed version bits after considering 0x20000000.
+# nerdqaxe+
+#BIT_MASK = 0xffff0ffe  # Specified bit mask for the nonce.
+#VERSION_MASK = 0x1fffe000  # Allowed version bits after considering 0x20000000.
+
+# nerdqaxe++
+BIT_MASK = 0xffff1ffe  # Specified bit mask for the nonce.
+VERSION_MASK = 0x07ffe000  # Allowed version bits after considering 0x20000000.
 
 # Known mining pool identifiers (mapping pool name to an identifying string).
 POOL_IDENTIFIERS = {

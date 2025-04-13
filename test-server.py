@@ -7,10 +7,14 @@ import hashlib
 
 # HOST = '127.0.0.1'
 HOST = '0.0.0.0'
-PORT = 4444
+PORT = 4446
 
 # this one gets found by bm1368s
-with open('879008.json', 'r') as f:
+#with open('879008.json', 'r') as f:
+#    data = json.loads(f.read())
+
+# this one gets found by bm1370s
+with open('892117.json', 'r') as f:
     data = json.loads(f.read())
 
 NOTIFY_PARAMS = data['notify']['params']
