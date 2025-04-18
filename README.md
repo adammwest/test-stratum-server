@@ -1,7 +1,19 @@
 # test-stratum-server
 
-**note: It has been tested with BM1368 only. It might not work with 1366 and probably doesn't with 1370.**<br/>
-**note2: BitAxe and BitAxeHex won't find the block. BitAxe not because the 3rd ASIC will find it and BitAxeHex not because the chip-ID is set differently**<br/>
+**note: This works with all Nerd*Axe variants with BM1368 and BM1370 (NerdAxe with BM1366 not supported)**<br/>
+**note2: BitAxe and BitAxeHex won't find the block because they set the chip-IDs differently**<br/>
+
+Before starting the server you need to enable BM1368 or BM1370:
+```
+# this one gets found by bm1368s
+#with open('879008.json', 'r') as f:
+#    data = json.loads(f.read())
+
+# this one gets found by bm1370s
+with open('892117.json', 'r') as f:
+    data = json.loads(f.read())
+```
+
 
 This minimum test Stratum server is for testing [NerdQaxes](https://github.com/shufps/qaxe) finding a block.
 
