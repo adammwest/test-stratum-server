@@ -28,7 +28,7 @@ v_mask = 0x00000000
 n_mask = 0x00000000
 
 enonce_subscribe = False
-enonce_switch_time_s = 2
+enonce_switch_time_s = 30
 extranonce1_hex = "00000000"
 
 
