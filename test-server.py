@@ -31,6 +31,12 @@ enonce_subscribe = False
 enonce_switch_time_s = 30
 extranonce1_hex = "00000000"
 
+# Globale Map: { (job_id, nonce, version): last_seen_time }
+last_seen = {}
+
+# ANSI Farben
+YELLOW = "\033[93m"
+RESET = "\033[0m"
 
 ##############################################################################
 # 3) Merkle & Hashing Helpers
@@ -488,16 +494,36 @@ def handle_stratum_request(conn, line):
         send_json(conn, response)
 
     elif method == "mining.submit":
-        global v_mask, n_mask
+        global v_mask, n_mask, last_seen
         # The miner found a share
         # format:
         # [+] Received mining.submit: ['bc1qaxeplus9dxnsqeyc0zdu4vy6zh67ujuzvmx7mz.nerdqaxe', 'job123', '000000000000000b', '67828a1d', '35de0912', '08b84000']
-        nonce = int(params[4], 16)
-        version = int(params[5], 16)
-        n_mask = n_mask | nonce
-        v_mask = v_mask | version
 
+        # Share-Daten extrahieren
+        job_id = extranonce1_hex # params[1]
+        nonce = params[4]
+        version = params[5]
 
+        n_mask |= int(nonce, 16)
+        v_mask |= int(version, 16)
+
+        # Key für Hashdict
+        key = (job_id, nonce, version)
+        now = time.time()
+
+        if key in last_seen:
+            delta = now - last_seen[key]
+            # schön human readable
+            if delta < 60:
+                human = f"{delta:.3f}s"
+            else:
+                mins, secs = divmod(delta, 60)
+                human = f"{int(mins)}m {secs:.3f}s"
+
+            print(f"{YELLOW}[!] Duplicate share detected for {key}, last seen {human} ago{RESET}")
+
+        # Zeit aktualisieren
+        last_seen[key] = now
 
         print(f"[+] Received mining.submit: {params} n_mask: {n_mask:08x}, v_mask: {v_mask:08x}")
         print(json.dumps(reconstruct(NOTIFY_PARAMS, params)))
