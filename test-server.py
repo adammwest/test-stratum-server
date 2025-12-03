@@ -388,13 +388,8 @@ def client_thread(conn, addr):
             epoch = int(time.time())
             if enonce_subscribe and (epoch > enonce_last_switch_time + enonce_switch_time_s):
                 extranonce1_hex = f"{random.getrandbits(32):08x}"
-                set_enonce = {
-                    "id": None,
-                    "method": "mining.set_extranonce",
-                    "params": [extranonce1_hex, 8]
-                }
-                send_json(conn, set_enonce)
-                print(f"[+] Sent set extranonce: {extranonce1_hex}")
+                
+                
                 enonce_last_switch_time = epoch
 
                 if notify_count>1:
@@ -404,12 +399,19 @@ def client_thread(conn, addr):
                 if send_empty:
                     print("Closing connection to trigger nbytes = 0 on client")
                     try:
-                        conn.shutdown(socket.SHUT_RDWR)  # or SHUT_WR is enough
+                        conn.shutdown(socket.SHUT_RDWR)
                     except OSError:
                         pass
                     conn.close()
                     os._exit(0)
                 else:
+                    set_enonce = {
+                        "id": None,
+                        "method": "mining.set_extranonce",
+                        "params": [extranonce1_hex, 8]
+                    }
+                    send_json(conn, set_enonce)
+                    print(f"[+] Sent set extranonce: {extranonce1_hex}")
                     send_mining_notify(conn)
                 notify_count+=1
 
