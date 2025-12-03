@@ -4,6 +4,8 @@ import json
 import threading
 import os
 import hashlib
+import time
+import random
 
 # HOST = '127.0.0.1'
 HOST = '0.0.0.0'
@@ -25,6 +27,16 @@ last_suggested_difficulty = 1024
 v_mask = 0x00000000
 n_mask = 0x00000000
 
+enonce_subscribe = False
+enonce_switch_time_s = 30
+extranonce1_hex = "00000000"
+
+# Globale Map: { (job_id, nonce, version): last_seen_time }
+last_seen = {}
+
+# ANSI Farben
+YELLOW = "\033[93m"
+RESET = "\033[0m"
 
 ##############################################################################
 # 3) Merkle & Hashing Helpers
@@ -315,12 +327,14 @@ def reconstruct_block_hash(
     }
 
 def reconstruct(notify, submit):
+    global extranonce1_hex
     """
     Shortcut for reconstructing the block hash from mining.notify and mining.submit parameters.
     """
     return reconstruct_block_hash(
         coinb1_hex=notify[2],
-        enonce1_bytes=bytes([0x00, 0x00, 0x00, 0x00]),
+        enonce1_bytes = bytes.fromhex(extranonce1_hex),
+        #enonce1_bytes=bytes([0x00, 0x00, 0x00, 0x00]),
         enonce2_hex=submit[2],
         coinb2_hex=notify[3],
         merkle_branch=notify[4],
@@ -341,6 +355,11 @@ def send_json(conn, obj):
 def client_thread(conn, addr):
     """Handle a single Stratum client connection."""
     global last_suggested_difficulty
+    global enonce_switch_time_s
+    global extranonce1_hex
+
+    enonce_last_switch_time = int(time.time())
+
     print(f"[+] Miner connected from {addr}")
     buffer = b""
     try:
@@ -363,6 +382,20 @@ def client_thread(conn, addr):
                     send_json(conn, set_difficulty_msg)
                     print(f"[+] Sent mining.set_difficulty with difficulty: {last_suggested_difficulty}")
                     last_suggested_difficulty = None
+
+            epoch = int(time.time())
+            if enonce_subscribe and (epoch > enonce_last_switch_time + enonce_switch_time_s):
+                extranonce1_hex = f"{random.getrandbits(32):08x}"
+                set_enonce = {
+                    "id": None,
+                    "method": "mining.set_extranonce",
+                    "params": [extranonce1_hex, 8]
+                }
+                send_json(conn, set_enonce)
+                print(f"[+] Sent set extranonce: {extranonce1_hex}")
+                enonce_last_switch_time = epoch
+                send_mining_notify(conn)
+
     except ConnectionResetError:
         print(f"[-] Miner {addr} disconnected abruptly.")
     except Exception as e:
@@ -371,10 +404,20 @@ def client_thread(conn, addr):
         conn.close()
         print(f"[-] Miner disconnected from {addr}")
 
+def send_mining_notify(conn):
+    # After authorize, send a single mining.notify job
+    notify_msg = {
+        "id": None,
+        "method": "mining.notify",
+        "params": NOTIFY_PARAMS
+    }
+    send_json(conn, notify_msg)
+    print("[+] Sent mining.notify job")
 
 def handle_stratum_request(conn, line):
     """Parse a single JSON line and handle various Stratum methods."""
     global last_suggested_difficulty
+    global enonce_subscribe
     try:
         message = json.loads(line.decode('utf-8'))
     except json.JSONDecodeError:
@@ -414,6 +457,16 @@ def handle_stratum_request(conn, line):
         }
         send_json(conn, response)
 
+    elif method == "mining.extranonce.subscribe":
+        enonce_subscribe = True
+        # Minimal "OK" response
+        response = {
+            "id": req_id,
+            "result": True,
+            "error": None
+        }
+        send_json(conn, response)
+
     elif method == "mining.authorize":
         # Typically "params" = [username, password]
         username = params[0] if len(params) > 0 else "unknown"
@@ -425,14 +478,7 @@ def handle_stratum_request(conn, line):
         }
         send_json(conn, response)
 
-        # After authorize, send a single mining.notify job
-        notify_msg = {
-            "id": None,
-            "method": "mining.notify",
-            "params": NOTIFY_PARAMS
-        }
-        send_json(conn, notify_msg)
-        print("[+] Sent mining.notify job")
+        send_mining_notify(conn)
 
     elif method == "mining.configure":
         # The miner is telling the server to use version-rolling with a given mask
@@ -448,16 +494,36 @@ def handle_stratum_request(conn, line):
         send_json(conn, response)
 
     elif method == "mining.submit":
-        global v_mask, n_mask
+        global v_mask, n_mask, last_seen
         # The miner found a share
         # format:
         # [+] Received mining.submit: ['bc1qaxeplus9dxnsqeyc0zdu4vy6zh67ujuzvmx7mz.nerdqaxe', 'job123', '000000000000000b', '67828a1d', '35de0912', '08b84000']
-        nonce = int(params[4], 16)
-        version = int(params[5], 16)
-        n_mask = n_mask | nonce
-        v_mask = v_mask | version
 
+        # Share-Daten extrahieren
+        job_id = extranonce1_hex # params[1]
+        nonce = params[4]
+        version = params[5]
 
+        n_mask |= int(nonce, 16)
+        v_mask |= int(version, 16)
+
+        # Key für Hashdict
+        key = (job_id, nonce, version)
+        now = time.time()
+
+        if key in last_seen:
+            delta = now - last_seen[key]
+            # schön human readable
+            if delta < 60:
+                human = f"{delta:.3f}s"
+            else:
+                mins, secs = divmod(delta, 60)
+                human = f"{int(mins)}m {secs:.3f}s"
+
+            print(f"{YELLOW}[!] Duplicate share detected for {key}, last seen {human} ago{RESET}")
+
+        # Zeit aktualisieren
+        last_seen[key] = now
 
         print(f"[+] Received mining.submit: {params} n_mask: {n_mask:08x}, v_mask: {v_mask:08x}")
         print(json.dumps(reconstruct(NOTIFY_PARAMS, params)))
