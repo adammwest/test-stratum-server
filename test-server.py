@@ -396,14 +396,12 @@ def client_thread(conn, addr):
                 send_json(conn, set_enonce)
                 print(f"[+] Sent set extranonce: {extranonce1_hex}")
                 enonce_last_switch_time = epoch
-                if notify_count>2:
+
+                if notify_count>1:
                     global send_empty
                     send_empty = True
                     
                 if send_empty:
-                    # Instead of:
-                    # conn.sendall("".encode('utf-8'))  # this does nothing
-
                     print("Closing connection to trigger nbytes = 0 on client")
                     try:
                         conn.shutdown(socket.SHUT_RDWR)  # or SHUT_WR is enough
