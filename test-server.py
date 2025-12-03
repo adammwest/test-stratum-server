@@ -22,14 +22,15 @@ with open('892117.json', 'r') as f:
 NOTIFY_PARAMS = data['notify']['params']
 
 # Store the last suggested difficulty
-last_suggested_difficulty = 1024
+last_suggested_difficulty = 2000
 
 v_mask = 0x00000000
 n_mask = 0x00000000
 
-enonce_subscribe = False
-enonce_switch_time_s = 30
+enonce_subscribe = True
+enonce_switch_time_s = 5
 extranonce1_hex = "00000000"
+send_empty = False
 
 # Globale Map: { (job_id, nonce, version): last_seen_time }
 last_seen = {}
@@ -357,6 +358,7 @@ def client_thread(conn, addr):
     global last_suggested_difficulty
     global enonce_switch_time_s
     global extranonce1_hex
+    notify_count:int = 0
 
     enonce_last_switch_time = int(time.time())
 
@@ -394,7 +396,24 @@ def client_thread(conn, addr):
                 send_json(conn, set_enonce)
                 print(f"[+] Sent set extranonce: {extranonce1_hex}")
                 enonce_last_switch_time = epoch
-                send_mining_notify(conn)
+                if notify_count>2:
+                    global send_empty
+                    send_empty = True
+                    
+                if send_empty:
+                    # Instead of:
+                    # conn.sendall("".encode('utf-8'))  # this does nothing
+
+                    print("Closing connection to trigger nbytes = 0 on client")
+                    try:
+                        conn.shutdown(socket.SHUT_RDWR)  # or SHUT_WR is enough
+                    except OSError:
+                        pass
+                    conn.close()
+                    os._exit(0)
+                else:
+                    send_mining_notify(conn)
+                notify_count+=1
 
     except ConnectionResetError:
         print(f"[-] Miner {addr} disconnected abruptly.")
@@ -533,6 +552,7 @@ def handle_stratum_request(conn, line):
             "result": True,  # Accept unconditionally
             "error": None
         }
+        
         send_json(conn, response)
 
     else:
@@ -561,6 +581,6 @@ def start_server(host=HOST, port=PORT):
     finally:
         sock.close()
 
-
+# 
 if __name__ == "__main__":
     start_server()
